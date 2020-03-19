@@ -1,13 +1,53 @@
-const { RuleTester } = require("eslint");
-const rule = require("../../../lib/rules/map");
+'use strict';
 
-const ruleTester = new RuleTester();
+const ESLintRuleTester = require('eslint').RuleTester;
+const MapESLintRule  = require("../../../lib/rules/map");
 
-ruleTester.run("map", rule, {
+ESLintRuleTester.setDefaultConfig({
+  parserOptions: {
+    ecmaVersion: 6,
+    sourceType: 'module',
+  },
+});
+
+const tests = {
   valid: [
-    {
-      code: "function A() { return _.map(collection, fn); }",
-    }
+    `
+      // Верно поскольку символ _ переопределен
+      const _ = {};
+      const m2 = _.map([], fn);
+    `,
+    `
+      // Верно поскольку символ _ переопределен
+      function test(_ = {}) {
+        const m2 = _.map([], fn);
+      }
+    `,
+    `
+      // Верно поскольку символ _ переопределен
+      const _ = {};
+
+      function test(a1) {
+        const m2 = _.map([], fn);
+      }
+    `,
+    `
+      // Верно для вызова функций отличных от _.map
+      const m2 = _.filter([], fn);
+    `,
+    `
+      // Верно для вызова функций Array.map
+      const m2 = [].map(fn);
+    `,
+    `
+      // Верно поскольку map вызыватся для объекта
+      const m2 = _.map({a: 1, b: 2}, fn);
+    `,
+    `
+      // Верно поскольку map вызыватся для переменной содержащей объект
+      const m1 = {a: 1, b: 2};
+      const m2 = _.map(m1, fn);
+    `,
   ],
   invalid: [
     {
@@ -17,4 +57,7 @@ ruleTester.run("map", rule, {
       ]
     }
   ]
-});
+}
+const ruleTester = new ESLintRuleTester();
+
+ruleTester.run("map", MapESLintRule, tests);
