@@ -24,6 +24,14 @@ const tests = {
       // Верно поскольку map вызыватся для объекта
       const m2 = _.map({a: 1, b: 2}, fn);
     `,
+    `
+      // Верно поскольку символ _ переопределен
+      const _ = {};
+
+      function test(a1) {
+        const m2 = _.map([], fn);
+      }
+    `,
   ],
   invalid: [
     {
@@ -31,6 +39,22 @@ const tests = {
         return _.map(collection, fn);
       }`,
       output: `function A() {
+        return Array.isArray(collection) ? collection.map(fn) : _.map(collection, fn);
+      }`,
+      errors: [
+        { message: "Can be replace by Array.map call" }
+      ]
+    }, {
+      code: `
+      import _ from "lodash";
+
+      function A() {
+        return _.map(collection, fn);
+      }`,
+      output: `
+      import _ from "lodash";
+
+      function A() {
         return Array.isArray(collection) ? collection.map(fn) : _.map(collection, fn);
       }`,
       errors: [
