@@ -29,7 +29,7 @@ const tests = {
       const _ = {};
 
       function test(a1) {
-        const m2 = _.map([], fn);
+        const m2 = _.map(collection, fn);
       }
     `,
   ],
