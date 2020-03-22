@@ -13,25 +13,6 @@ ESLintRuleTester.setDefaultConfig({
 const tests = {
   valid: [
     `
-      // Верно поскольку символ _ переопределен
-      const _ = {};
-      const m2 = _.map([], fn);
-    `,
-    `
-      // Верно поскольку символ _ переопределен
-      function test(_ = {}) {
-        const m2 = _.map([], fn);
-      }
-    `,
-    `
-      // Верно поскольку символ _ переопределен
-      const _ = {};
-
-      function test(a1) {
-        const m2 = _.map([], fn);
-      }
-    `,
-    `
       // Верно для вызова функций отличных от _.map
       const m2 = _.filter([], fn);
     `,
@@ -43,17 +24,37 @@ const tests = {
       // Верно поскольку map вызыватся для объекта
       const m2 = _.map({a: 1, b: 2}, fn);
     `,
-    `
-      // Верно поскольку map вызыватся для переменной содержащей объект
-      const m1 = {a: 1, b: 2};
-      const m2 = _.map(m1, fn);
-    `,
   ],
   invalid: [
     {
-      code: "function A() { return _.map(collection, fn); }",
+      code: `function A() {
+        return _.map(collection, fn);
+      }`,
+      output: `function A() {
+        return Array.isArray(collection) ? collection.map(fn) : _.map(collection, fn);
+      }`,
       errors: [
-        { message: "Avoid using variables named \'foo\'" }
+        { message: "Can be replace by Array.map call" }
+      ]
+    }, {
+      code: `function A(user, controller) {
+        return _.map(user.accounts, controller.apply.test);
+      }`,
+      output: `function A(user, controller) {
+        return Array.isArray(user.accounts) ? user.accounts.map(controller.apply.test) : _.map(user.accounts, controller.apply.test);
+      }`,
+      errors: [
+        { message: "Can be replace by Array.map call" }
+      ]
+    }, {
+      code: `function A() {
+        return _.map([1, 2, 3], fn);
+      }`,
+      output: `function A() {
+        return [1, 2, 3].map(fn);
+      }`,
+      errors: [
+        { message: "Can be replace by Array.map call" }
       ]
     }
   ]
